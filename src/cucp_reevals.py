@@ -45,22 +45,23 @@ INSTRUCTIONS:
 6. Provide a direct source quote for each fact.{precedents_text}
 
 OUTPUT FORMAT:
-You must output ONLY valid JSON in the following format:
+You must output ONLY valid JSON in the following format.
+CRITICAL: Replace every placeholder below with REAL data extracted from the narrative. If a detail is not mentioned, use "NOT PROVIDED". NEVER return the placeholder description text itself as a value.
 {{
-  "firm_name": "exact name or NONE",
-  "cross_reference_result": "exact revenue or FAILED",
-  "narrative_pnw": "exact PNW mentioned in narrative or NOT PROVIDED",
+  "firm_name": "<extract exact firm name or NONE>",
+  "cross_reference_result": "<extract exact revenue or FAILED>",
+  "narrative_pnw": "<extract exact PNW stated in narrative or NOT PROVIDED>",
   "extracted_facts": [
     {{
       "id": "fact_1",
-      "when": "date or NOT PROVIDED",
-      "where": "location or NOT PROVIDED",
-      "who": "person/group or NOT PROVIDED",
-      "what": "the specific incident",
-      "why": "the cause/motivation",
-      "magnitude": "description of the type and amount of economic harm (e.g., lost contracts, dollar amounts, or comparative disadvantage)",
+      "when": "<extract date/time period or NOT PROVIDED>",
+      "where": "<extract location or NOT PROVIDED>",
+      "who": "<extract person/group involved or NOT PROVIDED>",
+      "what": "<extract the specific incident described>",
+      "why": "<extract the cause/motivation or NOT PROVIDED>",
+      "magnitude": "<extract the type and amount of economic harm, e.g. lost contracts, dollar amounts, or comparative disadvantage, or NOT PROVIDED>",
       "demographic_flag": true or false,
-      "source_quote": "short exact snippet"
+      "source_quote": "<extract a short exact quote from the narrative>"
     }}
   ]
 }}"""
