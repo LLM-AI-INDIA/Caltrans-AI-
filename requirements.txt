@@ -14,7 +14,7 @@ SQLAlchemy==2.0.44
 streamlit==1.45.1
 streamlit_feedback==0.1.4
 tenacity==8.5.0
-
+tornado==6.4.2
 
 # --------- core data & cloud ---------
 #pandas>=2.0.0
