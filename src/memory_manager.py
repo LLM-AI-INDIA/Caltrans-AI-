@@ -1,9 +1,12 @@
 import json
 import os
+import shutil
+import datetime as dt
 from typing import List, Dict
 from openai import OpenAI
 
 MEMORY_FILE = os.path.join(os.path.dirname(__file__), 'memory_db.json')
+BACKUP_DIR = os.path.join(os.path.dirname(__file__), 'memory_backups')
 
 def _load_db() -> dict:
     if not os.path.exists(MEMORY_FILE):
@@ -26,8 +29,18 @@ def _save_db(db: dict):
     with open(MEMORY_FILE, 'w') as f:
         json.dump(db, f, indent=4)
 
+def _backup_db():
+    """Create a timestamped backup of memory_db.json before destructive operations."""
+    if not os.path.exists(MEMORY_FILE):
+        return
+    os.makedirs(BACKUP_DIR, exist_ok=True)
+    timestamp = dt.datetime.now().strftime("%Y%m%d_%H%M%S")
+    backup_path = os.path.join(BACKUP_DIR, f"memory_db_backup_{timestamp}.json")
+    shutil.copy2(MEMORY_FILE, backup_path)
+
 def overwrite_db(new_db: dict):
     """Completely overwrite the memory DB with an uploaded rules.json file."""
+    _backup_db()
     _save_db(new_db)
 
 def get_precedent_count(level: int) -> int:
@@ -83,6 +96,9 @@ def consolidate_memory_via_llm() -> str:
     overlapping rules into a clean `rules.json` format.
     Returns the JSON string blob for download.
     """
+    # Create a backup before the LLM overwrites the DB
+    _backup_db()
+    
     db = _load_db()
     client = OpenAI()
     
@@ -115,7 +131,8 @@ Return exactly valid JSON matching this structure:
     try:
         parsed = json.loads(new_rules)
         _save_db(parsed)
-    except:
-        pass
+    except json.JSONDecodeError:
+        pass  # Don't overwrite DB with malformed JSON — original stays intact
         
     return new_rules
+

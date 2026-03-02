@@ -65,17 +65,33 @@ You must output ONLY valid JSON in the following format:
   ]
 }}"""
 
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        response_format={"type": "json_object"},
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": f"Applicant narrative:\n{narrative_text}\n{revenue_context}"}
-        ],
-        temperature=0.0
-    )
-    
-    return json.loads(response.choices[0].message.content)
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            response_format={"type": "json_object"},
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": f"Applicant narrative:\n{narrative_text}\n{revenue_context}"}
+            ],
+            temperature=0.0
+        )
+        
+        try:
+            return json.loads(response.choices[0].message.content)
+        except json.JSONDecodeError:
+            # Retry once on malformed JSON
+            retry = client.chat.completions.create(
+                model="gpt-4o",
+                response_format={"type": "json_object"},
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": f"Applicant narrative:\n{narrative_text}\n{revenue_context}"}
+                ],
+                temperature=0.0
+            )
+            return json.loads(retry.choices[0].message.content)
+    except Exception as e:
+        return {"error": f"AI service error during fact extraction: {str(e)}", "extracted_facts": [], "firm_name": "NONE", "cross_reference_result": "FAILED", "narrative_pnw": "NOT PROVIDED"}
 
 # ==============================================================================
 # LEVEL 2: LEGAL CLASSIFICATION (The "Definitional" Layer)
@@ -112,17 +128,32 @@ Return valid JSON mapping each input fact ID to a classification.
   ]
 }}"""
 
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        response_format={"type": "json_object"},
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": f"Financial Context:\n{combined_financials}\n\nExtracted Facts to classify:\n{json.dumps(facts, indent=2)}"}
-        ],
-        temperature=0.0
-    )
-    
-    return json.loads(response.choices[0].message.content)
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            response_format={"type": "json_object"},
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": f"Financial Context:\n{combined_financials}\n\nExtracted Facts to classify:\n{json.dumps(facts, indent=2)}"}
+            ],
+            temperature=0.0
+        )
+        
+        try:
+            return json.loads(response.choices[0].message.content)
+        except json.JSONDecodeError:
+            retry = client.chat.completions.create(
+                model="gpt-4o",
+                response_format={"type": "json_object"},
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": f"Financial Context:\n{combined_financials}\n\nExtracted Facts to classify:\n{json.dumps(facts, indent=2)}"}
+                ],
+                temperature=0.0
+            )
+            return json.loads(retry.choices[0].message.content)
+    except Exception as e:
+        return {"error": f"AI service error during classification: {str(e)}", "classifications": []}
 
 # ==============================================================================
 # LEVEL 3: EVIDENTIARY THRESHOLD (The "Magnitude" Layer)
@@ -173,17 +204,32 @@ request_info MUST be "Yes" or "No".
   "certifier_comments": "Professional executive summary of the evaluation."
 }}"""
 
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        response_format={"type": "json_object"},
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": f"Classified Evidence:\n{json.dumps(classifications, indent=2)}\n\nRaw Facts:\n{json.dumps(facts, indent=2)}\n\nPNW Data point: {pnw_result}"}
-        ],
-        temperature=0.0
-    )
-    
-    return json.loads(response.choices[0].message.content)
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            response_format={"type": "json_object"},
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": f"Classified Evidence:\n{json.dumps(classifications, indent=2)}\n\nRaw Facts:\n{json.dumps(facts, indent=2)}\n\nPNW Data point: {pnw_result}"}
+            ],
+            temperature=0.0
+        )
+        
+        try:
+            return json.loads(response.choices[0].message.content)
+        except json.JSONDecodeError:
+            retry = client.chat.completions.create(
+                model="gpt-4o",
+                response_format={"type": "json_object"},
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": f"Classified Evidence:\n{json.dumps(classifications, indent=2)}\n\nRaw Facts:\n{json.dumps(facts, indent=2)}\n\nPNW Data point: {pnw_result}"}
+                ],
+                temperature=0.0
+            )
+            return json.loads(retry.choices[0].message.content)
+    except Exception as e:
+        return {"error": f"AI service error during threshold evaluation: {str(e)}", "criteria": [], "final_decision": "Error", "certifier_comments": ""}
 
 # ==============================================================================
 # REPORT GENERATION
@@ -251,7 +297,8 @@ def generate_final_md_report(level_1_data: dict, level_3_data: dict) -> str:
     md += "### 📝 CERTIFIER COMMENTS & FINAL SUMMARY\n"
     md += level_3_data.get('certifier_comments', 'No comments provided.')
     
-    return md
+    # Escape dollar signs to prevent Streamlit from rendering them as LaTeX
+    return md.replace('$', '\\$')
 
 # Keep the old top-level function signature for legacy fallback, though app.py should use the new one.
 def cucp_reevaluations(uploaded_pdf, firm_revenues=None):
