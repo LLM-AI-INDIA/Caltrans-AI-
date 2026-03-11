@@ -69,3 +69,4 @@ extracted_rubrics.txt
 *.pdf
 *.docx
 cloud-run-env.yaml
+cucp_learning_storyline.md

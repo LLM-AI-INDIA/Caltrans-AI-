@@ -628,7 +628,7 @@ if app_option != "Select the Usecase":
             # --- Progress Stepper ---
             st.markdown('<div class="eval-border-marker"></div>', unsafe_allow_html=True)
             with st.container(border=True):
-                st.markdown("<h4 style='text-align: center; margin-bottom: 0px; color: #1e293b; font-weight: 600;'>🧑‍🏫 Human in the Feedback Loop</h4>", unsafe_allow_html=True)
+                st.markdown("<h4 style='text-align: center; margin-bottom: 0px; color: #1e293b; font-weight: 600;'>Human in the Feedback Loop</h4>", unsafe_allow_html=True)
                 step_labels = ["Start", "Step 1: Review Facts", "Step 2: Review Classifications", "Step 3: Review Thresholds", "Final Report"]
                 current_step = st.session_state.eval_stage
                 stepper_html = '<div style="display: flex; align-items: center; justify-content: center; margin: 10px 0 10px 0; gap: 0;">'
