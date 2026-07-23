@@ -30,6 +30,11 @@ from src.project_delivery_evaluator import (
     ALL_METHODS,
     RUBRIC_QUESTIONS,
 )
+# Program Fit Evaluator is still in development and is off by default.
+# Set ENABLE_PROGRAM_FIT=1 (e.g. in .env) to enable it locally.
+ENABLE_PROGRAM_FIT = os.getenv("ENABLE_PROGRAM_FIT", "").lower() in ("1", "true", "yes")
+if ENABLE_PROGRAM_FIT:
+    from src.program_fit_ui import render_program_fit_ui
 
 
 def are_all_selected(options_list, selected_fields):
@@ -117,11 +122,11 @@ with st.sidebar:
     )
     s1, s2, s3 = st.columns((4, 4, 4))
     with s1:
-        st.image("image/oie_png.png")
+        st.image("image/oie_png.png", width=60)
     with s2:
-        st.image("image/aws_logo.png")
+        st.image("image/aws_logo.png", width=60)
     with s3:
-        st.image("image/AzureCloud_img.png")
+        st.image("image/AzureCloud_img.png", width=60)
 
 
 # Layouts
@@ -157,7 +162,7 @@ if vAR_AI_application == "Caltrans":
                 "Project Delivery Evaluator",
                 "Project Delivery Evaluator V2",
                 "Right of Way (ROW) Evaluation",
-            ),
+            ) + (("Program Fit Evaluator",) if ENABLE_PROGRAM_FIT else ()),
             key="app_select",
             label_visibility="collapsed"
         )
@@ -1393,7 +1398,21 @@ if app_option != "Select the Usecase":
                 key="row_upload",
                 help="Upload a Caltrans Right of Way appraisal report for rubric-based evaluation.",
             )
+        # The ROW UI reads the upload from st.session_state["row_upload"] itself.
         render_landing_ai_evaluation_ui()
+
+    elif ENABLE_PROGRAM_FIT and app_option == "Program Fit Evaluator":
+        with col22:
+            st.subheader("Upload Nomination Package")
+        with col24:
+            pf_files = st.file_uploader(
+                "Upload SB1 nomination package (.xlsx, .xlsm, .pdf, .docx)",
+                type=["xlsx", "xlsm", "pdf", "docx"],
+                accept_multiple_files=True,
+                key="pf_upload",
+                help="Program Fit workbook (.xlsx) + Cal-B/C model (.xlsm) + traffic / metric docs.",
+            )
+        render_program_fit_ui(pf_files)
 
     elif app_option in ["Project Delivery Evaluator", "Project Delivery Evaluator V2"]:
         is_pde_v2_menu = app_option == "Project Delivery Evaluator V2"
